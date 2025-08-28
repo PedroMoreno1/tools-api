@@ -36,6 +36,7 @@ public class Tool {
 
     //Nuevo
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ToolStatus status = ToolStatus.IN_STORE;
 
     @Column(name = "ticket_code", unique = true, nullable = false)

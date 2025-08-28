@@ -7,6 +7,8 @@ import com.empresa.toolsapi.dto.tool.ToolResponseDTO;
 import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
+import com.empresa.toolsapi.enums.ToolStatus;
+import com.empresa.toolsapi.utils.AppSettings;
 
 public class ToolMapper {
 
@@ -18,6 +20,8 @@ public class ToolMapper {
                 .urlImg(dto.getUrlImg())
                 .section(section)
                 .category(category)
+                .status(ToolStatus.IN_STORE)
+                .ticketCode(AppSettings.NOT_TICKET)
                 .build();
     }
 

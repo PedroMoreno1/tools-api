@@ -9,6 +9,7 @@ import com.empresa.toolsapi.enums.TicketStatus;
 import com.empresa.toolsapi.enums.ToolStatus;
 import com.empresa.toolsapi.exception.BadRequestException;
 import com.empresa.toolsapi.exception.ResourceNotFoundException;
+import com.empresa.toolsapi.exception.ToolNotAvailable;
 import com.empresa.toolsapi.mapper.ReturnDetailsMapper;
 import com.empresa.toolsapi.mapper.ToolTicketMapper;
 import com.empresa.toolsapi.repository.PersonRepository;
@@ -17,6 +18,8 @@ import com.empresa.toolsapi.repository.ToolRepository;
 import com.empresa.toolsapi.repository.ToolTicketRepository;
 import com.empresa.toolsapi.service.TicketService;
 import com.empresa.toolsapi.utils.AppSettings;
+import com.empresa.toolsapi.validation.PersonValidation;
+import com.empresa.toolsapi.validation.ToolValidation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,39 +34,39 @@ public class TicketServiceImpl implements TicketService {
 
     private final ToolTicketRepository repoTicket;
     private final ToolRepository repoTool;
-    private final PersonRepository repoPerson;
     private final ReturnDetailsRepository returnDetailsRepo;
+    private final ToolValidation toolValidation;
+    private final PersonValidation personValidation;
 
 
     @Override
-    public TicketResponseDTO createTicket(TicketRequestDTO dto) {
+    @Transactional
+    public TicketResponseDTO createTicket(TicketRequestDTO dto){
 
-        Tool existsTool = repoTool.findById(dto.getIdTool())
-                .orElseThrow(() -> new EntityNotFoundException("Herramienta no encontrada"));
+        Tool tool = toolValidation.existsTool(dto.getIdTool());
+        Person person = personValidation.existsPerson(dto.getDni());
 
-        Person existsPerson = repoPerson.findByDni(dto.getDni())
-                .orElseThrow(() -> new EntityNotFoundException("Persona no registrada"));
-
-        boolean isPending = repoTicket.existsByToolAndStatus(existsTool, TicketStatus.PENDING);
+        boolean isPending = repoTicket.existsByToolAndStatus(tool, TicketStatus.PENDING);
         if (isPending) {
-            throw new RuntimeException("La herramienta ya esta prestada");
+            throw new ToolNotAvailable(AppSettings.TOOL_NOT_AVAILABLE); //Msj como argumento
         }
+
         //Crear ticket
         Ticket newTicket = Ticket.builder()
-                .tool(existsTool)
-                .person(existsPerson)
+                .tool(tool)
+                .person(person)
                 .borrowedAt(LocalDateTime.now())
                 .ticketCode(generarteTicketCode())
                 .status(TicketStatus.PENDING)
                 .isDeleted(false)
                 .build();
 
-        //Actualizar estado y asignando el ticket a la herramienta correspondiente
-        existsTool.setStatus(ToolStatus.BORROWED);
-        existsTool.setTicketCode(newTicket.getTicketCode());
+        //Actualizar estado y asignar el ticket a la herramienta
+        tool.setStatus(ToolStatus.BORROWED);
+        tool.setTicketCode(newTicket.getTicketCode());
 
         repoTicket.save(newTicket);
-        repoTool.save(existsTool);
+        repoTool.save(tool);
 
         return ToolTicketMapper.toResponseDTO(newTicket);
     }

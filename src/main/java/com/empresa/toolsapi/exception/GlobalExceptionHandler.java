@@ -60,4 +60,10 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(message, HttpStatus.BAD_REQUEST, request);
     }
+    //409 - Conflic
+    //Solicitud valida, pero no puede ser procesada por el estado del recurso
+    @ExceptionHandler(ToolNotAvailable.class)
+    public ResponseEntity<ErrorResponse>handleToolNotAvailable(ToolNotAvailable ex, HttpServletRequest request){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
 }

@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TicketResponseDTO {
+    private Long idTicket;
     private String ticketCode;
     private String toolName;
     private String personName;

@@ -1,13 +1,11 @@
 package com.empresa.toolsapi.service;
 
-import com.empresa.toolsapi.dto.ticket.TicketCodeRequestDTO;
-import com.empresa.toolsapi.dto.ticket.TicketRequestDTO;
-import com.empresa.toolsapi.dto.ticket.TicketResponseDTO;
-import java.util.List;
+import com.empresa.toolsapi.dto.ticket.*;
 
 public interface TicketService {
 
     TicketResponseDTO createTicket(TicketRequestDTO dto);
-    TicketResponseDTO returnTool(TicketCodeRequestDTO codeRequestDTO);
-    List<TicketResponseDTO> getAllTickets();
+    TicketResponseDTO getByTicketCode(String ticketCode);
+    DetailsResponseDTO returnTool(ReturnToolRequestDTO returnDTO);
+
 }

@@ -6,6 +6,7 @@ import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.repository.CategoryRepository;
 import com.empresa.toolsapi.repository.PersonRepository;
 import com.empresa.toolsapi.repository.SectionRepository;
+import com.empresa.toolsapi.repository.ToolTicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,6 @@ public class DataInitializer implements CommandLineRunner {
     private final SectionRepository sectionRepository;
     private final CategoryRepository categoryRepository;
     private final PersonRepository personRepository;
-    /*private final ToolTicketRepository ticketRepository;*/
 
     @Override
     public void run(String... args) throws Exception {
@@ -25,20 +25,14 @@ public class DataInitializer implements CommandLineRunner {
         initSections();
         initCategories();
         initPerson();
-        /*deleteTicket();*/
     }
 
-    /*private void deleteTicket(){
-        if (ticketRepository.count() >= 1){
-            ticketRepository.deleteAll();
-        }
-    }*/
     private void initSections(){
         if (sectionRepository.count() == 0){
 
             Section s1 = Section.builder()
                     .name("A-1")
-                    .description("no tiene, ok?")
+                    .description("primera")
                     .build();
             sectionRepository.save(s1);
         }

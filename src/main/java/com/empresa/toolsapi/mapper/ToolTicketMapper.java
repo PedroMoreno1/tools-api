@@ -1,12 +1,8 @@
 package com.empresa.toolsapi.mapper;
 
 import com.empresa.toolsapi.dto.ticket.TicketResponseDTO;
-import com.empresa.toolsapi.entity.Person;
-import com.empresa.toolsapi.entity.Tool;
 import com.empresa.toolsapi.entity.Ticket;
-import com.empresa.toolsapi.enums.TicketStatus;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ToolTicketMapper {
@@ -19,6 +15,7 @@ public class ToolTicketMapper {
         String returnedAtFormatted = ticket.getReturnedAt() != null ? ticket.getReturnedAt().format(formatter) : null;
 
         return TicketResponseDTO.builder()
+                .idTicket(ticket.getIdTicket())
                 .ticketCode(ticket.getTicketCode())
                 .toolName(ticket.getTool().getName())
                 .personName(ticket.getPerson().getName())
@@ -41,13 +38,4 @@ public class ToolTicketMapper {
      * Operador Ternario: condición ? valorSiVerdadero : valorSiFalso --- equivalente a: if(){}else{}
      */
 
-    public static Ticket toEntity(String tickedCode, Tool tool, Person person){
-        return Ticket.builder()
-                .ticketCode(tickedCode)
-                .tool(tool)
-                .person(person)
-                .borrowedAt(LocalDateTime.now())
-                .status(TicketStatus.PENDING)
-                .build();
-    }
 }

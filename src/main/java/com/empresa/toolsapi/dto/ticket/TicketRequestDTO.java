@@ -18,6 +18,6 @@ public class TicketRequestDTO {
     @NotNull(message = "El id de la Herramienta es obligatorio")
     private Long idTool;
     @NotBlank(message = "El dni es requerido")
-    @Max(value = 8, message = "max 8 digitos")
+    //@Max(value = 8, message = "max 8 digitos")
     private String dni;
 }

@@ -37,4 +37,12 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TicketStatus status;
+
+    //Para eliminación lógica
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+
+
+    @OneToOne(mappedBy = "ticket")
+    private ReturnDetails returnDetails;
 }

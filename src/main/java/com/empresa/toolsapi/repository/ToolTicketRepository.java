@@ -13,4 +13,5 @@ public interface ToolTicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByStatus(TicketStatus status);
     boolean existsByToolAndStatus(Tool tool, TicketStatus status);
     Optional<Ticket> findByTicketCode(String ticketCode);
+
 }

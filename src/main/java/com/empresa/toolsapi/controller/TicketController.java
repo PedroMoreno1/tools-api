@@ -1,8 +1,6 @@
 package com.empresa.toolsapi.controller;
 
-import com.empresa.toolsapi.dto.ticket.TicketCodeRequestDTO;
-import com.empresa.toolsapi.dto.ticket.TicketRequestDTO;
-import com.empresa.toolsapi.dto.ticket.TicketResponseDTO;
+import com.empresa.toolsapi.dto.ticket.*;
 import com.empresa.toolsapi.service.TicketService;
 import com.empresa.toolsapi.utils.AppSettings;
 import jakarta.validation.Valid;
@@ -26,11 +24,20 @@ public class TicketController {
         return ResponseEntity.ok(ticket);
     }
 
-    @PostMapping("/return")
-    public ResponseEntity<TicketResponseDTO> returnTool(@RequestBody TicketCodeRequestDTO requestDTO){
+    @GetMapping
+    public ResponseEntity<TicketResponseDTO> getByTicketCode(@RequestParam String ticketCode){
 
-        TicketResponseDTO returnTool = ticketService.returnTool(requestDTO);
+        TicketResponseDTO getTicket = ticketService.getByTicketCode(ticketCode);
 
-        return ResponseEntity.ok(returnTool);
+        return ResponseEntity.ok(getTicket);
+    }
+
+    @PatchMapping("/close")
+    public ResponseEntity<DetailsResponseDTO> closeTicket(@RequestBody ReturnToolRequestDTO returnRequestDTO){
+
+        DetailsResponseDTO detailsResponseDTO = ticketService.returnTool(returnRequestDTO);
+
+        return ResponseEntity.ok(detailsResponseDTO);
+
     }
 }

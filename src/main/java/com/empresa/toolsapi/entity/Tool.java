@@ -1,7 +1,7 @@
 package com.empresa.toolsapi.entity;
 
 import com.empresa.toolsapi.enums.ToolStatus;
-import com.empresa.toolsapi.utils.AppSettings;
+import com.empresa.toolsapi.utils.ErrorMessages;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,6 +40,6 @@ public class Tool {
     private ToolStatus status = ToolStatus.IN_STORE;
 
     @Column(name = "ticket_code", unique = true, nullable = false)
-    private String ticketCode = AppSettings.NOT_TICKET;
+    private String ticketCode = ErrorMessages.NOT_TICKET;
 
 }

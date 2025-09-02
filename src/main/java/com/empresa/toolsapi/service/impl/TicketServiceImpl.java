@@ -12,15 +12,13 @@ import com.empresa.toolsapi.exception.ResourceNotFoundException;
 import com.empresa.toolsapi.exception.ToolNotAvailable;
 import com.empresa.toolsapi.mapper.ReturnDetailsMapper;
 import com.empresa.toolsapi.mapper.ToolTicketMapper;
-import com.empresa.toolsapi.repository.PersonRepository;
 import com.empresa.toolsapi.repository.ReturnDetailsRepository;
 import com.empresa.toolsapi.repository.ToolRepository;
 import com.empresa.toolsapi.repository.ToolTicketRepository;
 import com.empresa.toolsapi.service.TicketService;
-import com.empresa.toolsapi.utils.AppSettings;
+import com.empresa.toolsapi.utils.ErrorMessages;
 import com.empresa.toolsapi.validation.PersonValidation;
 import com.empresa.toolsapi.validation.ToolValidation;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,11 +42,11 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponseDTO createTicket(TicketRequestDTO dto){
 
         Tool tool = toolValidation.existsTool(dto.getIdTool());
-        Person person = personValidation.existsPerson(dto.getDni());
+        Person person = personValidation.existsDni(dto.getDni());
 
         boolean isPending = repoTicket.existsByToolAndStatus(tool, TicketStatus.PENDING);
         if (isPending) {
-            throw new ToolNotAvailable(AppSettings.TOOL_NOT_AVAILABLE); //Msj como argumento
+            throw new ToolNotAvailable(ErrorMessages.TOOL_NOT_AVAILABLE); //Msj como argumento
         }
 
         //Crear ticket
@@ -75,7 +73,7 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponseDTO getByTicketCode(String ticketCode) {
 
         Ticket ticket = repoTicket.findByTicketCode(ticketCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Código de Ticket no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.TICKET_CODE_NOT_EXISTS, ticketCode)));
 
         return ToolTicketMapper.toResponseDTO(ticket);
     }
@@ -86,18 +84,18 @@ public class TicketServiceImpl implements TicketService {
 
         //Buscar ticket por id
         Ticket ticket = repoTicket.findById(returnDTO.getIdTicket())
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.TICKET_NOT_FOUND));
 
         //Ticket fue devuelto o esta eliminado
         if (ticket.getStatus() == TicketStatus.RETURNED || ticket.isDeleted()){
-            throw new BadRequestException("Ticket no disponible");
+            throw new BadRequestException(ErrorMessages.TICKET_NOT_AVAILABLE);
         }
         //--- Tool del Ticket ---
         //Crear obj con la herramienta del ticket
         Tool tool = ticket.getTool();
         //Cambiar estado y eliminar codigo de ticket
         tool.setStatus(ToolStatus.IN_STORE);
-        tool.setTicketCode(AppSettings.NOT_TICKET);
+        tool.setTicketCode(ErrorMessages.NOT_TICKET);
 
         //--- Ticket ---
         //Asignar fecha de retorno y cambiar estado

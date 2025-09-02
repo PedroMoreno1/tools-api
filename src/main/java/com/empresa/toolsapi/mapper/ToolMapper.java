@@ -8,7 +8,7 @@ import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
 import com.empresa.toolsapi.enums.ToolStatus;
-import com.empresa.toolsapi.utils.AppSettings;
+import com.empresa.toolsapi.utils.ErrorMessages;
 
 public class ToolMapper {
 
@@ -21,7 +21,7 @@ public class ToolMapper {
                 .section(section)
                 .category(category)
                 .status(ToolStatus.IN_STORE)
-                .ticketCode(AppSettings.NOT_TICKET)
+                .ticketCode(ErrorMessages.NOT_TICKET)
                 .build();
     }
 

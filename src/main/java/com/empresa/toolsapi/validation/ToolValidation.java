@@ -9,6 +9,7 @@ import com.empresa.toolsapi.exception.ResourceNotFoundException;
 import com.empresa.toolsapi.repository.CategoryRepository;
 import com.empresa.toolsapi.repository.SectionRepository;
 import com.empresa.toolsapi.repository.ToolRepository;
+import com.empresa.toolsapi.utils.ErrorMessages;
 import com.empresa.toolsapi.utils.SectionCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -28,17 +29,17 @@ public class ToolValidation {
     public SectionCategory validateSectionAndCategory(ToolRequestDTO dto){
 
         if (dto.getIdSection() == null){
-            throw new BadRequestException("EL ID de SECTION no puede ser nulo");
+            throw new BadRequestException(ErrorMessages.SECTION_ID_NOTNULL);
         }
         if (dto.getIdCategory() == null){
-            throw new BadRequestException("EL ID de CATEGORY no puede ser nulo");
+            throw new BadRequestException(ErrorMessages.CATEGORY_ID_NOTNULL);
         }
 
         Section section = sectionRepository.findById(dto.getIdSection())
-                .orElseThrow(() -> new ResourceNotFoundException("Seccion no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.SECTION_NOT_FOUND));
 
         Category category = categoryRepository.findById(dto.getIdCategory())
-                .orElseThrow(() -> new ResourceNotFoundException("Categoria no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CATEGORY_NOT_FOUND));
 
         return new SectionCategory(section, category);
     }
@@ -48,19 +49,19 @@ public class ToolValidation {
 
         //Al usar : findById <- nos devuelve el objeto, si usamos existsById <- nos devuelve boolean.
         return toolRepository.findById(idTool)
-                .orElseThrow(()-> new ResourceNotFoundException("No existe ninguna herramienta con el ID: "+ idTool));
+                .orElseThrow(()-> new ResourceNotFoundException(ErrorMessages.TOOL_NOT_FOUND));
     }
 
     //Verifica SI seccion existe
     public Section sectionValid(Long idSection){
         return sectionRepository.findById(idSection)
-                .orElseThrow(()-> new ResourceNotFoundException("La seccion no existe"));
+                .orElseThrow(()-> new ResourceNotFoundException(ErrorMessages.SECTION_NOT_FOUND));
     }
 
     //Verifica SI categoria existe
     public Category categoryValid(Long idSection){
         return categoryRepository.findById(idSection)
-                .orElseThrow(()-> new ResourceNotFoundException("La categoria no existe"));
+                .orElseThrow(()-> new ResourceNotFoundException(ErrorMessages.CATEGORY_NOT_FOUND));
     }
 
     //Para validar si el valor es nulo, no tener campos asi: ("") o (" ") con espacios en blanco.
@@ -72,7 +73,8 @@ public class ToolValidation {
     //Verifica si es id existe(Tipo: boolean)
     public void idExists(Long idTool){
         if (!toolRepository.existsById(idTool)){
-            throw new ResourceNotFoundException("El recurso con ID: "+ idTool + "no existe!");
+            // String.format permite crear cadenas con variables insertadas de forma limpia y legible, usando placeholders como %d para números, %s para texto, etc.
+            throw new ResourceNotFoundException(String.format(ErrorMessages.TOOL_ID_NOT_EXISTS, idTool));
         }
     }
 }

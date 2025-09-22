@@ -2,13 +2,11 @@ package com.empresa.toolsapi.mapper;
 
 import com.empresa.toolsapi.dto.category.CategoryDTO;
 import com.empresa.toolsapi.dto.section.SectionDTO;
-import com.empresa.toolsapi.dto.tool.ToolRequestDTO;
-import com.empresa.toolsapi.dto.tool.ToolResponseDTO;
+import com.empresa.toolsapi.dto.tool.request.ToolRequestDTO;
+import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
-import com.empresa.toolsapi.enums.ToolStatus;
-import com.empresa.toolsapi.utils.ErrorMessages;
 
 public class ToolMapper {
 
@@ -17,11 +15,12 @@ public class ToolMapper {
         return Tool.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .urlImg(dto.getUrlImg())
+                .imageUrl(dto.getImageUrl())
                 .section(section)
                 .category(category)
-                .status(ToolStatus.IN_STORE)
-                .ticketCode(ErrorMessages.NOT_TICKET)
+                .totalQuantity(dto.getTotalQuantity())
+                .availableQuantity(dto.getTotalQuantity()) //misma cantidad del total
+                .rentalPrice(dto.getRentalPrice())
                 .build();
     }
 
@@ -40,11 +39,12 @@ public class ToolMapper {
                 .id(tool.getIdTool())
                 .name(tool.getName())
                 .description(tool.getDescription())
-                .urlImg(tool.getUrlImg())
+                .urlImg(tool.getImageUrl())
                 .sectionDTO(sectionDTO)
                 .categoryDTO(categoryDTO)
-                .status(tool.getStatus())
-                .ticketCode(tool.getTicketCode())
+                .totalQuantity(tool.getTotalQuantity())
+                .availableQuantity(tool.getAvailableQuantity())
+                .rentalPrice(tool.getRentalPrice())
                 .build();
     }
 }

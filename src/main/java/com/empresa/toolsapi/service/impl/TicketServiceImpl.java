@@ -1,72 +1,97 @@
 package com.empresa.toolsapi.service.impl;
 
-import com.empresa.toolsapi.dto.ticket.*;
-import com.empresa.toolsapi.entity.Person;
-import com.empresa.toolsapi.entity.ReturnDetails;
-import com.empresa.toolsapi.entity.Tool;
-import com.empresa.toolsapi.entity.Ticket;
-import com.empresa.toolsapi.enums.TicketStatus;
-import com.empresa.toolsapi.enums.ToolStatus;
+import com.empresa.toolsapi.dto.ticket.ticketCreation.request.ToolRentRequestDTO;
+import com.empresa.toolsapi.dto.ticket.ticketCreation.request.TicketRequestDTO;
+import com.empresa.toolsapi.dto.ticket.ticketCreation.response.TicketResponseDTO;
+import com.empresa.toolsapi.dto.ticket.ticketReturn.DetailsResponseDTO;
+import com.empresa.toolsapi.dto.ticket.ticketReturn.ReturnToolRequestDTO;
+import com.empresa.toolsapi.entity.*;
 import com.empresa.toolsapi.exception.BadRequestException;
 import com.empresa.toolsapi.exception.ResourceNotFoundException;
 import com.empresa.toolsapi.exception.ToolNotAvailable;
 import com.empresa.toolsapi.mapper.ReturnDetailsMapper;
-import com.empresa.toolsapi.mapper.ToolTicketMapper;
+import com.empresa.toolsapi.mapper.TicketMapper;
 import com.empresa.toolsapi.repository.ReturnDetailsRepository;
+import com.empresa.toolsapi.repository.TicketToolRepository;
 import com.empresa.toolsapi.repository.ToolRepository;
-import com.empresa.toolsapi.repository.ToolTicketRepository;
+import com.empresa.toolsapi.repository.TicketRepository;
 import com.empresa.toolsapi.service.TicketService;
 import com.empresa.toolsapi.utils.ErrorMessages;
-import com.empresa.toolsapi.validation.PersonValidation;
+import com.empresa.toolsapi.validation.CustomerValidation;
+import com.empresa.toolsapi.validation.TicketValidation;
 import com.empresa.toolsapi.validation.ToolValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
 
-    private final ToolTicketRepository repoTicket;
+    private final TicketRepository repoTicket;
     private final ToolRepository repoTool;
-    private final ReturnDetailsRepository returnDetailsRepo;
+    private final CustomerValidation customerValidation;
     private final ToolValidation toolValidation;
-    private final PersonValidation personValidation;
-
+    private final TicketToolRepository repoTicketTool;
+    private final ReturnDetailsRepository repoReturnDetails;
+    private final TicketValidation ticketValidation;
 
     @Override
     @Transactional
     public TicketResponseDTO createTicket(TicketRequestDTO dto){
 
-        Tool tool = toolValidation.existsTool(dto.getIdTool());
-        Person person = personValidation.existsDni(dto.getDni());
-
-        boolean isPending = repoTicket.existsByToolAndStatus(tool, TicketStatus.PENDING);
-        if (isPending) {
-            throw new ToolNotAvailable(ErrorMessages.TOOL_NOT_AVAILABLE); //Msj como argumento
+        if (dto.getTools().size() > 2){
+            throw new BadRequestException("Maximo 2 variedades de herramientas");
         }
 
+        Customer customer = customerValidation.existsDni(dto.getDni());
+
         //Crear ticket
-        Ticket newTicket = Ticket.builder()
-                .tool(tool)
-                .person(person)
-                .borrowedAt(LocalDateTime.now())
-                .ticketCode(generarteTicketCode())
-                .status(TicketStatus.PENDING)
-                .isDeleted(false)
+        Ticket ticket = Ticket.builder()
+                .ticketCode(generateTicketCode())
+                .customer(customer)
+                .rentedDate(LocalDateTime.now())
                 .build();
 
-        //Actualizar estado y asignar el ticket a la herramienta
-        tool.setStatus(ToolStatus.BORROWED);
-        tool.setTicketCode(newTicket.getTicketCode());
+        List<TicketTool> ticketTools = new ArrayList<>();
+        List<Tool> toolsUpdate = new ArrayList<>();
 
-        repoTicket.save(newTicket);
-        repoTool.save(tool);
+        for (ToolRentRequestDTO toolRented : dto.getTools()){
 
-        return ToolTicketMapper.toResponseDTO(newTicket);
+            Tool tool = toolValidation.existsTool(toolRented.getIdTool());
+
+            if (toolRented.getRentedQuantity() > tool.getAvailableQuantity()){
+                throw new ToolNotAvailable(ErrorMessages.QUANTITY_NOT_AVAILABLE);
+            }
+
+            BigDecimal totalCost = ticketValidation.totalCost(toolRented.getRentedQuantity(), tool.getRentalPrice());
+
+            TicketTool ticketTool = new TicketTool(ticket, tool);
+            ticketTool.setQuantity(toolRented.getRentedQuantity());
+            ticketTool.setRentalCostUnit(tool.getRentalPrice());
+            ticketTool.setTotalCostRent(totalCost);
+
+            tool.setAvailableQuantity(ticketValidation.totalAvailable(toolRented.getRentedQuantity(), tool.getAvailableQuantity()));
+
+            toolsUpdate.add(tool);
+            ticketTools.add(ticketTool);
+
+        }
+
+        repoTicket.save(ticket);
+        repoTool.saveAll(toolsUpdate);
+        repoTicketTool.saveAll(ticketTools);//relacion en bd, se puede evitar usado cascade persist
+
+        ticket.setTicketTools(ticketTools); //relacion en memoria
+
+        return TicketMapper.toResponseDTO(ticket);
     }
 
     @Override
@@ -75,53 +100,49 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = repoTicket.findByTicketCode(ticketCode)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.TICKET_CODE_NOT_EXISTS, ticketCode)));
 
-        return ToolTicketMapper.toResponseDTO(ticket);
+        return TicketMapper.toResponseDTO(ticket);
     }
 
     @Override
     @Transactional
-    public DetailsResponseDTO returnTool(ReturnToolRequestDTO returnDTO) {
+    public DetailsResponseDTO returnToolAndCloseTicket(ReturnToolRequestDTO returnDTO) {
 
         //Buscar ticket por id
         Ticket ticket = repoTicket.findById(returnDTO.getIdTicket())
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.TICKET_NOT_FOUND));
 
-        //Ticket fue devuelto o esta eliminado
-        if (ticket.getStatus() == TicketStatus.RETURNED || ticket.isDeleted()){
-            throw new BadRequestException(ErrorMessages.TICKET_NOT_AVAILABLE);
+        if(repoReturnDetails.existsByTicket_IdTicket(ticket.getIdTicket())){
+            throw new ResourceNotFoundException(ErrorMessages.TICKET_CLOSED);
         }
-        //--- Tool del Ticket ---
-        //Crear obj con la herramienta del ticket
-        Tool tool = ticket.getTool();
-        //Cambiar estado y eliminar codigo de ticket
-        tool.setStatus(ToolStatus.IN_STORE);
-        tool.setTicketCode(ErrorMessages.NOT_TICKET);
+
+        ReturnDetails rd = new ReturnDetails();
+        rd.setNote(returnDTO.getNote());
+        rd.setReturnedByName(returnDTO.getDeliveredBy().getNamePerson());
+        rd.setReturnedByDni(returnDTO.getDeliveredBy().getDniPerson());
+        rd.setTicket(ticket);
 
         //--- Ticket ---
-        //Asignar fecha de retorno y cambiar estado
-        ticket.setReturnedAt(LocalDateTime.now());
-        ticket.setStatus(TicketStatus.RETURNED);
-
-        //--- ReturnDetails ---
-        //Crear obj, asignar ticket para la relacion y datos.
-        ReturnDetails returnDetails = new ReturnDetails();
-        returnDetails.setTicket(ticket);
-        returnDetails.setNote(returnDTO.getNote());
-        returnDetails.setDeliveredBy(returnDTO.getDeliveredBy().getNamePerson());
-        returnDetails.setDniPerson(returnDTO.getDeliveredBy().getDniPerson());
+        ticket.setReturnedDate(LocalDateTime.now());
 
         //Guardar
-        repoTool.save(tool);
         repoTicket.save(ticket);
-        returnDetailsRepo.save(returnDetails);
+        repoReturnDetails.save(rd);
 
-        return ReturnDetailsMapper.toResponseDTO(ticket, returnDetails);
+        return ReturnDetailsMapper.toResponseDTO(ticket, rd);
+
+    }
+
+    @Override
+    public List<TicketResponseDTO> findAllTickets() {
+
+        return repoTicket.findAll().stream()
+                .map(TicketMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
 
-    private String generarteTicketCode(){
+    private String generateTicketCode(){
         return "TCK-" + UUID.randomUUID().toString().substring(0,12).toUpperCase();
     }
 
-    //IMPLEMENTAR ELIMINACION LOGICA CON STATUS
 }

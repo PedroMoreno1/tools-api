@@ -2,8 +2,8 @@ package com.empresa.toolsapi.service.impl;
 
 import com.empresa.toolsapi.dto.PaginatedResponseDTO;
 import com.empresa.toolsapi.dto.tool.ToolPatchDTO;
-import com.empresa.toolsapi.dto.tool.ToolRequestDTO;
-import com.empresa.toolsapi.dto.tool.ToolResponseDTO;
+import com.empresa.toolsapi.dto.tool.request.ToolRequestDTO;
+import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
@@ -68,7 +68,7 @@ public class ToolServiceImpl implements ToolService {
 
         existsTool.setName(dto.getName());
         existsTool.setDescription(dto.getDescription());
-        existsTool.setUrlImg(dto.getUrlImg());
+        existsTool.setImageUrl(dto.getImageUrl());
 
         SectionCategory sc = toolValidation.validateSectionAndCategory(dto);
         existsTool.setSection(sc.section());
@@ -93,7 +93,7 @@ public class ToolServiceImpl implements ToolService {
         }
 
         if (toolValidation.isValidString(patchDTO.getUrlImg())) {
-            existsTool.setUrlImg(patchDTO.getUrlImg().trim());
+            existsTool.setImageUrl(patchDTO.getUrlImg().trim());
         }
 
 
@@ -124,7 +124,7 @@ public class ToolServiceImpl implements ToolService {
         toolRepository.deleteById(idTool);
     }
 
-    //MEJORAR, NO TRAER TODAS LAS HERRAMIENTAS!!------------------
+    //MEJORAR!, NO TRAER TODAS LAS HERRAMIENTAS!!------------------
     @Override
     public List<ToolResponseDTO> searchTools(String idTool) {
 

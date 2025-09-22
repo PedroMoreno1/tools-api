@@ -1,6 +1,5 @@
-package com.empresa.toolsapi.dto.ticket;
+package com.empresa.toolsapi.dto.ticket.ticketReturn;
 
-import com.empresa.toolsapi.enums.TicketStatus;
 import lombok.*;
 
 //CERRAR TICKET -- RESPUESTA
@@ -12,9 +11,6 @@ import lombok.*;
 public class DetailsResponseDTO {
     private Long idDetails;
     private String ticketCode;
-    private String personName;
-    private String personDni;
-    private TicketStatus status;
     private PersonReturnDTO deliveredBy;
     private String note;
 }

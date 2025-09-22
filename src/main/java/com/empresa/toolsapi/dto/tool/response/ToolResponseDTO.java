@@ -1,10 +1,11 @@
-package com.empresa.toolsapi.dto.tool;
+package com.empresa.toolsapi.dto.tool.response;
 
 import com.empresa.toolsapi.dto.category.CategoryDTO;
 import com.empresa.toolsapi.dto.section.SectionDTO;
-import com.empresa.toolsapi.enums.ToolStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -20,6 +21,7 @@ public class ToolResponseDTO {
     private SectionDTO sectionDTO;
     @JsonProperty("category")
     private CategoryDTO categoryDTO;
-    private ToolStatus status;
-    private String ticketCode;
+    private int totalQuantity;
+    private int availableQuantity;
+    private BigDecimal rentalPrice;
 }

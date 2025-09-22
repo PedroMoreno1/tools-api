@@ -2,8 +2,8 @@ package com.empresa.toolsapi.controller;
 
 import com.empresa.toolsapi.dto.PaginatedResponseDTO;
 import com.empresa.toolsapi.dto.tool.ToolPatchDTO;
-import com.empresa.toolsapi.dto.tool.ToolRequestDTO;
-import com.empresa.toolsapi.dto.tool.ToolResponseDTO;
+import com.empresa.toolsapi.dto.tool.request.ToolRequestDTO;
+import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.service.ToolService;
 import com.empresa.toolsapi.utils.AppSettings;
 import jakarta.validation.Valid;
@@ -16,8 +16,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/v1/tool")
-@CrossOrigin(origins = AppSettings.URL_CROSS_ORIGIN)
+@RequestMapping("api/v2/tool")
 public class ToolController {
 
     private final ToolService toolService;

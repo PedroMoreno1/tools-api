@@ -2,15 +2,18 @@ package com.empresa.toolsapi.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor
 @Builder
 @Entity
+@Table(name = "category")
 public class Category {
 
     @Id
@@ -20,6 +23,14 @@ public class Category {
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at" )
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Tool> tools = new ArrayList<>();

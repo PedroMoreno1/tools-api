@@ -1,16 +1,19 @@
 package com.empresa.toolsapi.entity;
 
-import com.empresa.toolsapi.enums.TicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter @Setter
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@AllArgsConstructor @NoArgsConstructor
 @Entity
+@Table(name = "ticket")
 public class Ticket {
 
     @Id
@@ -21,28 +24,23 @@ public class Ticket {
     @Column(name = "ticket_code", unique = true, nullable = false)
     private String ticketCode;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "tool_id", nullable = false)
-    private Tool tool;
-
     @ManyToOne(optional = false)
-    @JoinColumn(name = "person_id", nullable = false)
-    private Person person;
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column(name = "borrowed_At", nullable = false, updatable = false)
-    private LocalDateTime borrowedAt;
-    @Column(name = "returned_At")
-    private LocalDateTime returnedAt;
+    @Column(name = "rented_date", nullable = false, updatable = false)
+    private LocalDateTime rentedDate;
+    @Column(name = "returned_date")
+    private LocalDateTime returnedDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TicketStatus status;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    //Para eliminación lógica
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    @UpdateTimestamp
+    @Column(name = "updated_at" )
+    private LocalDateTime updatedAt;
 
-
-    @OneToOne(mappedBy = "ticket")
-    private ReturnDetails returnDetails;
+    @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<TicketTool> ticketTools = new ArrayList<>();
 }

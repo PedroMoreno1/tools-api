@@ -1,4 +1,4 @@
-package com.empresa.toolsapi.dto.ticket;
+package com.empresa.toolsapi.dto.ticket.ticketCreation.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

@@ -1,20 +1,20 @@
 package com.empresa.toolsapi.validation;
 
-import com.empresa.toolsapi.entity.Person;
+import com.empresa.toolsapi.entity.Customer;
 import com.empresa.toolsapi.exception.ResourceNotFoundException;
-import com.empresa.toolsapi.repository.PersonRepository;
+import com.empresa.toolsapi.repository.CustomerRepository;
 import com.empresa.toolsapi.utils.ErrorMessages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PersonValidation {
+public class CustomerValidation {
 
-    private final PersonRepository personRepository;
+    private final CustomerRepository customerRepository;
 
-    public Person existsDni(String dni){
-        return personRepository.findByDni(dni)
+    public Customer existsDni(String dni){
+        return customerRepository.findByDni(dni)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.DNI_UNREGISTERED));
     }
 }

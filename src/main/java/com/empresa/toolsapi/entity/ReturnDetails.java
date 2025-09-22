@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -23,12 +27,21 @@ public class ReturnDetails {
     private String note;
 
     //Datos de la persona que realizara la devolucion
-    @Column(name = "delivered_by",length = 100)
-    private String deliveredBy;
-    @Column(name = "dni_person", length = 8)
-    private String dniPerson;
+    @Column(name = "returned_by_name",length = 100)
+    private String returnedByName;
+
+    @Column(name = "returnedByDni", length = 8)
+    private String returnedByDni;
 
     @OneToOne
-    @JoinColumn(name = "id_ticket", unique = true)
+    @JoinColumn(name = "ticket_id", unique = true)
     private Ticket ticket;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at" )
+    private LocalDateTime updatedAt;
 }

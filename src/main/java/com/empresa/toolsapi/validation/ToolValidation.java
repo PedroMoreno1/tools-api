@@ -57,8 +57,8 @@ public class ToolValidation {
     }
 
     //Devolver categoria SI existe
-    public Category categoryValid(Long idSection){
-        return categoryRepository.findById(idSection)
+    public Category categoryValid(Long idCategory){
+        return categoryRepository.findById(idCategory)
                 .orElseThrow(()-> new ResourceNotFoundException(ErrorMessages.CATEGORY_NOT_FOUND));
     }
 

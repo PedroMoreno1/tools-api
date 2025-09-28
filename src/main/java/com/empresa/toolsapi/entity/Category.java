@@ -9,9 +9,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
-@Builder
+@Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "category")
 public class Category {
@@ -21,6 +20,8 @@ public class Category {
     @Column(name = "id_category")
     private Long idCategory;
 
+    //Unico campo editable
+    @Setter
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
@@ -34,4 +35,8 @@ public class Category {
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Tool> tools = new ArrayList<>();
+
+    public Category(String name){
+        this.name = name;
+    }
 }

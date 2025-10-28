@@ -5,7 +5,6 @@ import com.empresa.toolsapi.dto.ticket.ticketCreation.response.TicketResponseDTO
 import com.empresa.toolsapi.dto.ticket.ticketReturn.DetailsResponseDTO;
 import com.empresa.toolsapi.dto.ticket.ticketReturn.ReturnToolRequestDTO;
 import com.empresa.toolsapi.service.TicketService;
-import com.empresa.toolsapi.utils.AppSettings;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,7 @@ public class TicketController {
         return ResponseEntity.ok(ticket);
     }
 
-    @GetMapping("/searchTicketCode")
+    @GetMapping("/getTicketCode")
     public ResponseEntity<TicketResponseDTO> getByTicketCode(@RequestParam String ticketCode){
 
         TicketResponseDTO getTicket = ticketService.getByTicketCode(ticketCode);

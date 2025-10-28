@@ -7,9 +7,12 @@ import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
+import com.empresa.toolsapi.exception.BadRequestException;
 import com.empresa.toolsapi.mapper.ToolMapper;
+import com.empresa.toolsapi.repository.TicketToolRepository;
 import com.empresa.toolsapi.repository.ToolRepository;
 import com.empresa.toolsapi.service.ToolService;
+import com.empresa.toolsapi.utils.ErrorMessages;
 import com.empresa.toolsapi.utils.SectionCategory;
 import com.empresa.toolsapi.validation.ToolValidation;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +20,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class ToolServiceImpl implements ToolService {
 
     private final ToolRepository toolRepository;
     private final ToolValidation toolValidation;
+    private final TicketToolRepository ticketToolRepository;
 
     @Override
     public ToolResponseDTO createTool(ToolRequestDTO dto) {
@@ -59,24 +60,6 @@ public class ToolServiceImpl implements ToolService {
 
         Tool existsTool = toolValidation.existsTool(idTool);
         return ToolMapper.toResponseDTO(existsTool);
-    }
-
-    @Override
-    public ToolResponseDTO updateTool(ToolRequestDTO dto, Long idTool) {
-
-        Tool existsTool = toolValidation.existsTool(idTool);
-
-        existsTool.setName(dto.getName());
-        existsTool.setDescription(dto.getDescription());
-        existsTool.setImageUrl(dto.getImageUrl());
-
-        SectionCategory sc = toolValidation.validateSectionAndCategory(dto);
-        existsTool.setSection(sc.section());
-        existsTool.setCategory(sc.category());
-
-        Tool updateTool = toolRepository.save(existsTool);
-
-        return ToolMapper.toResponseDTO(updateTool);
     }
 
     @Override
@@ -116,27 +99,45 @@ public class ToolServiceImpl implements ToolService {
 
     }
 
+    /**
+     * Actualizar la cantidad total de una herramienta en especifico.
+     * @param idTool
+     * @param amountToAdd
+     * @return
+     */
     @Override
-    public void deleteTool(Long idTool) {
-        //valida
-        toolValidation.idExists(idTool);
-        //elimina
-        toolRepository.deleteById(idTool);
+    public ToolResponseDTO updateTotalQuantity(Long idTool, int amountToAdd) {
+
+        Tool tool = toolValidation.existsTool(idTool);
+
+        int total = tool.getTotalQuantity();
+        int available = tool.getAvailableQuantity();
+
+        toolValidation.amountRange(amountToAdd);
+
+        tool.setTotalQuantity(total + amountToAdd);
+        tool.setAvailableQuantity(available + amountToAdd);
+
+        Tool updateQuantity = toolRepository.save(tool);
+
+        return ToolMapper.toResponseDTO(updateQuantity);
     }
 
-    //MEJORAR!, NO TRAER TODAS LAS HERRAMIENTAS!!------------------
+    /**
+     * Desactiva la herramienta si no tiene un ticket activo
+     * @param idTool
+     */
     @Override
-    public List<ToolResponseDTO> searchTools(String idTool) {
+    public void deactivateTool(Long idTool) {
 
-        toolValidation.isValidString(idTool);
+        Tool tool = toolValidation.existsTool(idTool);
 
-        List<Tool> tools = toolRepository.findAll();
+        if (ticketToolRepository.existsByTool_IdToolAndTicket_IsActiveTrue(tool.getIdTool())){
+            throw new BadRequestException(ErrorMessages.TOOL_TICKET_ACTIVE);
+        }
 
-        //Busqueda PARCIAL, no exacta, usamos contains para verificar si contiene una subcadena: idTool(1234).contains(23) = true porque contiene el "23"
-        //Se transforma en String porque viene del parametro de la URL
-        return tools.stream()
-                .filter(tool -> String.valueOf(tool.getIdTool()).contains(idTool))
-                .map(ToolMapper::toResponseDTO)
-                .collect(Collectors.toList());
+        tool.setActive(false);
+
+        toolRepository.save(tool);
     }
 }

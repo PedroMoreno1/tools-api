@@ -43,4 +43,7 @@ public class Ticket {
 
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<TicketTool> ticketTools = new ArrayList<>();
+
+    @Column(name = "is_active")
+    private boolean isActive = true;
 }

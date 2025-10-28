@@ -75,4 +75,11 @@ public class ToolValidation {
             throw new ResourceNotFoundException(String.format(ErrorMessages.TOOL_ID_NOT_EXISTS, idTool));
         }
     }
+
+    //Verificar que la cantidad este dentro del rango
+    public void amountRange(int amountToAdd){
+        if (amountToAdd <= 0 || amountToAdd >10){
+            throw new BadRequestException(ErrorMessages.TOOL_QUANTITY_RANGE);
+        }
+    }
 }

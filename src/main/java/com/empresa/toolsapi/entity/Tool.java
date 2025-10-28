@@ -54,4 +54,6 @@ public class Tool {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private boolean active = true;
+
 }

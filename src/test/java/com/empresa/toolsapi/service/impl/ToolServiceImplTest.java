@@ -1,12 +1,16 @@
 package com.empresa.toolsapi.service.impl;
 
+import com.empresa.toolsapi.dto.tool.ToolPatchDTO;
 import com.empresa.toolsapi.dto.tool.request.ToolRequestDTO;
 import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.entity.Category;
 import com.empresa.toolsapi.entity.Section;
 import com.empresa.toolsapi.entity.Tool;
+import com.empresa.toolsapi.exception.BadRequestException;
 import com.empresa.toolsapi.mapper.ToolMapper;
+import com.empresa.toolsapi.repository.TicketToolRepository;
 import com.empresa.toolsapi.repository.ToolRepository;
+import com.empresa.toolsapi.utils.ErrorMessages;
 import com.empresa.toolsapi.utils.SectionCategory;
 import com.empresa.toolsapi.validation.ToolValidation;
 import org.junit.jupiter.api.Test;
@@ -17,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +35,8 @@ public class ToolServiceImplTest {
     private ToolRepository toolRepository;
     @Mock
     private ToolValidation toolValidation;
+    @Mock
+    private TicketToolRepository ticketToolRepository;
 
     //3 - Inyectar los mocks en la clase que se hara el test
     @InjectMocks
@@ -103,5 +110,125 @@ public class ToolServiceImplTest {
         } catch (NoSuchFieldException | IllegalAccessException e){
             throw new RuntimeException("Error al setear id en el test", e);
         }
+    }
+
+    @Test
+    void testUpdateTool(){
+
+        //(1) -- Arrange (preparar los datos, mocks, comportamiento simulado)
+        //(1.1)BASE DE DATOS
+        // -Simulacion de los 'Section' y 'Category' existentes en la DB.
+        Section sectionTest = new Section("scTest", "mi section test");
+        Category categoryTest = new Category("ctTest");
+        setId(sectionTest, "idSection", 1L); //Simula que la DB crea un id.
+        setId(categoryTest, "idCategory", 1L); //Simula que la DB crea un id.
+
+        Tool toolTest = new Tool();
+        toolTest.setName("Serrucho");
+        toolTest.setDescription("Herramienta nueva");
+        toolTest.setImageUrl("http://link.com/img.jpg");
+        toolTest.setSection(sectionTest);
+        toolTest.setCategory(categoryTest);
+        toolTest.setTotalQuantity(20);
+        toolTest.setAvailableQuantity(20);
+        toolTest.setRentalPrice(new BigDecimal("39.95"));
+        toolTest.setCreatedAt(LocalDateTime.now().minusDays(2));
+        toolTest.setUpdatedAt(LocalDateTime.now());
+        toolTest.setActive(true);
+        setId(toolTest, "idTool", 1L);
+
+        //===
+
+        //Request(Actualizacion parcial de solo 2 campos)
+        ToolPatchDTO requestPatchTest = new ToolPatchDTO();
+        requestPatchTest.setName("Serrucho C1");
+        requestPatchTest.setUrlImg("http://link2.com/img22.jpg");
+
+        //== When ==
+        //Existe la herramienta con ese id? si, entonces devuelve el obj
+        when(toolValidation.existsTool(1L)).thenReturn(toolTest);
+
+        /**
+         * Se envia solo los campos necesarios para actualizar(Patch), los que no se especifican
+         * automaticamente pasan con null, entonces validamos, los que son null no pasan el if()
+         * por eso no se setean.
+         */
+        when(toolValidation.isValidString(null)).thenReturn(false);
+        //El nombre que reciba pasara
+        when(toolValidation.isValidString(requestPatchTest.getName())).thenReturn(true);
+        //La url que reciba pasara
+        when(toolValidation.isValidString(requestPatchTest.getUrlImg())).thenReturn(true);
+
+
+        //Guarda cualquier objeto de tipo tool, devuelve toolTest como resultado simulado
+        when(toolRepository.save(any(Tool.class))).thenReturn(toolTest);
+
+        //(2)ACT
+        ToolResponseDTO response = toolService.updateToolPatch(1L, requestPatchTest);
+
+        //(3)ASSERT
+        assertNotNull(response);
+        assertEquals("Serrucho C1", response.getName());
+        //== Verify ==
+        //existsTool fue invocado 1 vez con el id 1
+        verify(toolValidation, times(1)).existsTool(1L);
+        //isValidString fue invocado 3 veces con cualquier valor como argumento
+        verify(toolValidation, times(3)).isValidString(any());
+
+
+    }
+
+    @Test
+    void testDeactivateTool(){
+
+        Section sectionTest = new Section("scTest", "mi section test");
+        Category categoryTest = new Category("ctTest");
+        setId(sectionTest, "idSection", 1L); //Simula que la DB crea un id.
+        setId(categoryTest, "idCategory", 1L); //Simula que la DB crea un id.
+
+        Tool toolTest = new Tool();
+        toolTest.setName("Serrucho");
+        toolTest.setDescription("Herramienta nueva");
+        toolTest.setImageUrl("http://link.com/img.jpg");
+        toolTest.setSection(sectionTest);
+        toolTest.setCategory(categoryTest);
+        toolTest.setTotalQuantity(20);
+        toolTest.setAvailableQuantity(20);
+        toolTest.setRentalPrice(new BigDecimal("39.95"));
+        toolTest.setCreatedAt(LocalDateTime.now().minusDays(2));
+        toolTest.setUpdatedAt(LocalDateTime.now());
+        toolTest.setActive(true);
+        setId(toolTest, "idTool", 1L);
+
+
+        when(toolValidation.existsTool(1L)).thenReturn(toolTest);
+        when(ticketToolRepository.existsByTool_IdToolAndTicket_IsActiveTrue(1L)).thenReturn(false); //No tiene ticket activo
+
+        when(toolRepository.save(any(Tool.class))).thenReturn(toolTest);
+
+        toolService.deactivateTool(1L);
+
+        //El ticket cambio de estado a false?
+        assertFalse(toolTest.isActive());
+
+
+         /*
+
+        when(toolValidation.existsTool(1L)).thenReturn(toolTest);
+        when(ticketToolRepository.existsByTool_IdToolAndTicket_IsActiveTrue(1L)).thenReturn(true); // con esto("!") = false, No tiene tickets activos
+
+
+        // Act + Assert
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> toolService.deactivateTool(1L)
+        );
+
+        assertEquals(ErrorMessages.TOOL_TICKET_ACTIVE, exception.getMessage());
+
+        // Verifica que NO se haya llamado al save, ya que se lanzó la excepción antes
+        verify(toolRepository, never()).save(any());
+
+         */
     }
 }

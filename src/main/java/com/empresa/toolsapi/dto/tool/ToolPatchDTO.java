@@ -11,6 +11,4 @@ public class ToolPatchDTO {
     private String urlImg;
     private Long idSection;
     private Long idCategory;
-    private int totalQuantity;
-    private double rentalPrice;
 }

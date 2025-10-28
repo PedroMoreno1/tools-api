@@ -35,5 +35,10 @@ public class ErrorMessages {
     public static final String RENTAL_PRICE_MAX = "Precio demasiado alto, no exceder de '9999.99'";
 
 
+    //STATUS
+    public static final String TOOL_TICKET_ACTIVE = "Herramienta con ticket activo";
+
+    //QUANTITY
+    public static final String TOOL_QUANTITY_RANGE = "La cantidad agregada debe ser de min 1 y max 10";
 
 }

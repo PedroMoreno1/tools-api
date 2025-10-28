@@ -5,14 +5,12 @@ import com.empresa.toolsapi.dto.tool.ToolPatchDTO;
 import com.empresa.toolsapi.dto.tool.request.ToolRequestDTO;
 import com.empresa.toolsapi.dto.tool.response.ToolResponseDTO;
 import com.empresa.toolsapi.service.ToolService;
-import com.empresa.toolsapi.utils.AppSettings;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,23 +51,7 @@ public class ToolController {
         return ResponseEntity.ok(tool);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ToolResponseDTO> updateTool(@Valid @PathVariable Long id, @RequestBody ToolRequestDTO dto){
-
-        ToolResponseDTO updateTool = toolService.updateTool(dto,id);
-
-        return ResponseEntity.ok(updateTool);
-    }
-
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<Void> deleteToolById(@PathVariable Long id){
-
-        toolService.deleteTool(id);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/patch/{id}")
+    @PatchMapping("/update/{id}")
     public ResponseEntity<ToolResponseDTO> updatePartialTool(@PathVariable Long id, @RequestBody ToolPatchDTO patchDTO){
 
         ToolResponseDTO patchTool = toolService.updateToolPatch(id, patchDTO);
@@ -77,11 +59,19 @@ public class ToolController {
         return ResponseEntity.ok(patchTool);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<ToolResponseDTO>> searchTools(@RequestParam String idTool){
+    @PatchMapping("/updateQuantity/{id}")
+    public ResponseEntity<ToolResponseDTO> updateQuantity(@PathVariable Long id, @RequestParam int amountToAdd){
 
-        List<ToolResponseDTO> listTools = toolService.searchTools(idTool);
+        ToolResponseDTO response = toolService.updateTotalQuantity(id,amountToAdd);
 
-        return ResponseEntity.ok(listTools);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("deactivate/{id}")
+    public ResponseEntity<Void> deactivateTool(@PathVariable Long id){
+
+        toolService.deactivateTool(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
